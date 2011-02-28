@@ -264,7 +264,7 @@ If this value is not set, we infer a template via C<< $c->action->private_path >
 
 =head2 zoom_class
 
-This is the View class which is responsible for containing actions that convert
+This is the View class which is responsible for containing actions that converts
 a L</template> into a rendered body suitable for returning to a user agent.  By
 default we infer from the controller name such that if your controller is called
 C<MyApp::Web::Controller::Foo> and your base View class is C<MyApp::Web::View::HTML>,

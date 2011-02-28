@@ -104,7 +104,7 @@ If this value is not set, we infer a template via `$c->action->private_path`
 
 ## zoom_class
 
-This is the View class which is responsible for containing actions that convert
+This is the View class which is responsible for containing actions that converts
 a [template](#pod_template) into a rendered body suitable for returning to a user agent.  By
 default we infer from the controller name such that if your controller is called
 `MyApp::Web::Controller::Foo` and your base View class is `MyApp::Web::View::HTML`,
