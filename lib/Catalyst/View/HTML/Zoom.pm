@@ -59,16 +59,39 @@ sub _template_path_part_from_context {
 
 sub render {
     my ($self, $c, $template_path_part, $args) = @_;
+    my $vars =  {$args ? %{ $args } : %{ $c->stash }};
     my $zoom = $self->_build_zoom_from($template_path_part);
+    my $renderer = $self->_build_renderer_from($c);
+    return $renderer->($zoom, $vars)->to_html;
+}
+
+sub _build_renderer_from {
+    my ($self, $c) = @_;
+    if(my $code = $c->stash->{zoom_do}) {
+        $self->_build_renderer_from_coderef($code);
+    } else {
+        $self->_build_renderer_from_zoomer_class($c);
+    }
+}
+
+sub _build_renderer_from_coderef {
+    my ($self, $code) = @_;
+    return sub {
+        my ($zoom, $vars) = @_;
+        return $code->($zoom, %$vars);
+    };
+}
+
+sub _build_renderer_from_zoomer_class {
+    my ($self, $c) = @_;
     my $zoomer_class = $self->_zoomer_class_from_context($c);
     my $zoomer = $self->_build_zoomer_from($zoomer_class);
     my $action = $self->_target_action_from_context($c);
-
-    LOCALIZE_ZOOM: {
-        local $_ = $zoom;
-        my $vars =  {$args ? %{ $args } : %{ $c->stash }};
-        return $zoomer->$action($vars)->to_html;
-    }
+    return sub {
+        my ($zoom, $vars) = @_;
+        local $_ = $zoom;       
+        return $zoomer->$action($vars);
+    };
 }
 
 sub _build_zoom_from {

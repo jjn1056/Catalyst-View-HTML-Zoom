@@ -33,6 +33,18 @@ sub name_zaction :Local {
       zoom_action => 'main',
     );
 }
+
+sub inlined_action :Local {
+    my ($self, $c) = @_;
+    $c->stash(
+        name => 'John',
+        template => 'main',
+        zoom_do => sub {
+            my ($zoom, %args) = @_;
+            $zoom->select("#name")->replace_content($args{name});
+        },
+    );
+}
  
 sub end : ActionClass('RenderView') {}
 
