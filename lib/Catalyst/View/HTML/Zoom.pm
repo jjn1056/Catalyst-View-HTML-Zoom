@@ -52,7 +52,7 @@ sub _template_path_part_from_context {
     if ($self->has_template_extension) {
         my $ext = $self->template_extension;
         $template_path_part = $template_path_part . '.' . $ext
-          unless $template_path_part =~ /\.$ext$/;
+          unless $template_path_part =~ /\.$ext$/ || ref $template_path_part;
     }
     return $template_path_part;
 }
@@ -239,6 +239,64 @@ filesystem.
 
 However, if C<$template> is a ref, we assume this is a scalar ref containing 
 some html you wish to render directly.
+
+=head1 STASH KEYS
+
+This View uses the following stash keys as hints to the processor.  Currently
+these keys are passed on in the stash to the underlying templates.
+
+=head2 template
+
+This overrides which template file is parsed by L<HTML::Zoom>.  If the value 
+is a plain scalar then we assume it is a file off the template L</root>.  If it
+is a scalar ref, we assume it is the actual body of the template we wish to
+parse.
+
+If this value is not set, we infer a template via C<< $c->action->private_path >>
+
+=head2 zoom_class
+
+This is the View class which is responsible for containing actions that convert
+a L</template> into a rendered body suitable for returning to a user agent.  By
+default we infer from the controller name such that if your controller is called
+C<MyApp::Web::Controller::Foo> and your base View class is C<MyApp::Web::View::HTML>,
+the C<zoom_class> is called C<MyApp::Web::View::HTML::Foo>.
+
+If you override this default you can either give a full package name, such as
+C<MyApp::CommonStuff::View::Foo> or a relative package name such as <::Foo>, in
+which case we will automatically prefix the base View (like C<MyApp::Web::View::HTML>)
+to create a full path (C<MyApp::Web::View::HTML::Foo>).
+
+=head2 zoom action
+
+This refers to a method name in your L</zoom_class> which does the actual work of
+processing a template into something we return as the body of an HTTP response.
+
+    package MyApp::View::HTML::Foo;
+
+    sub fill_name {
+        my ($self, $args) = @_;
+        $_->select("#name")->replace_content($args->{name});
+    }
+
+=head2 zoom_do
+
+This is a subroutine reference which is optionally used to provide L<HTML::Zoom>
+directives directly in a controller.  Useful for simple templates and rapid 
+prototyping.
+
+    sub example_zoom_do :Local {
+        my ($self, $c) = @_;
+        $c->stash(
+            name => 'John',
+            zoom_do => sub {
+                my ($zoom, %args) = @_;
+                $zoom->select("#name")->replace_content($args{name});
+            },
+        );
+    }
+
+If this key is not defined, we assume you want to use a class as above.
 
 =head1 WARNING: VOLATILE!
 

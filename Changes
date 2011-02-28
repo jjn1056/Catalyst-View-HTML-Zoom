@@ -12,6 +12,8 @@ Revision history for Perl extension Catalyst-View-HTML-Zoom
               delegated view classes.
             - Refactored to clearly method functionalty
             - Additional test cases and documentation for above
+            - let you pass a stash key 'zoom_do' that is a coderef to process 
+              the zoom template
             - Debug logging
 
 0.002002    24 Mar 2010
