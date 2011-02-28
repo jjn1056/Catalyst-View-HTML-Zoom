@@ -183,6 +183,14 @@ __PACKAGE__->meta->make_immutable;
 
     GET /wobble/dance => "<p>Shake those <span id="shake">hips</span>!</p>";
 
+=head1 DESCRIPTION
+
+This is our first pass attempt at bringing L<HTML::Zoom> to L<Catalyst>.  You
+should be familiar with L<HTML::Zoom> before using this.  Additionally, as this
+is an early attempt to envision how this will work we say:
+
+L<"Danger, Will Robinson!"|http://en.wikipedia.org/wiki/Danger,_Will_Robinson>
+
 =head1 ATTRIBUTES
 
 The following is a list of configuration attributes you can set in your global
@@ -263,7 +271,7 @@ C<MyApp::Web::Controller::Foo> and your base View class is C<MyApp::Web::View::H
 the C<zoom_class> is called C<MyApp::Web::View::HTML::Foo>.
 
 If you override this default you can either give a full package name, such as
-C<MyApp::CommonStuff::View::Foo> or a relative package name such as <::Foo>, in
+C<MyApp::CommonStuff::View::Foo> or a relative package name such as C<::Foo>, in
 which case we will automatically prefix the base View (like C<MyApp::Web::View::HTML>)
 to create a full path (C<MyApp::Web::View::HTML::Foo>).
 

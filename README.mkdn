@@ -23,6 +23,14 @@
 
     GET /wobble/dance => "<p>Shake those <span id="shake">hips</span>!</p>";
 
+# DESCRIPTION
+
+This is our first pass attempt at bringing [HTML::Zoom](http://search.cpan.org/perldoc?HTML::Zoom) to [Catalyst](http://search.cpan.org/perldoc?Catalyst).  You
+should be familiar with [HTML::Zoom](http://search.cpan.org/perldoc?HTML::Zoom) before using this.  Additionally, as this
+is an early attempt to envision how this will work we say:
+
+["Danger, Will Robinson!"](http://en.wikipedia.org/wiki/Danger,_Will_Robinson)
+
 # ATTRIBUTES
 
 The following is a list of configuration attributes you can set in your global
@@ -103,7 +111,7 @@ default we infer from the controller name such that if your controller is called
 the `zoom_class` is called `MyApp::Web::View::HTML::Foo`.
 
 If you override this default you can either give a full package name, such as
-`MyApp::CommonStuff::View::Foo` or a relative package name such as <::Foo>, in
+`MyApp::CommonStuff::View::Foo` or a relative package name such as `::Foo`, in
 which case we will automatically prefix the base View (like `MyApp::Web::View::HTML`)
 to create a full path (`MyApp::Web::View::HTML::Foo`).
 
