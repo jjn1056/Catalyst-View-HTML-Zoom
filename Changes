@@ -10,7 +10,7 @@ Revision history for Perl extension Catalyst-View-HTML-Zoom
             - Improved control over where your templates are stored
             - Let you use the Catalyst Configuration to pass arguments to your
               delegated view classes.
-            - Refactored to clearly method functionalty
+            - Refactored to clarify method functionalty
             - Additional test cases and documentation for above
             - let you pass a stash key 'zoom_do' that is a coderef to process 
               the zoom template
