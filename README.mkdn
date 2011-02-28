@@ -47,16 +47,16 @@ The following is a list of configuration attributes you can set in your global
 ## template_extension
 
 Optionally set the filename extension of your zoomable templates.  Common
-values might be `html` or `xhtml`
+values might be `html` or `xhtml`.  Should be a scalar.
 
 ## content_type
 
-Sets the default `content-type` of the response body.
+Sets the default `content-type` of the response body.  Should be a scalar.
 
 ## root
 
 Used at the prefix path for where yout templates are stored.  Defaults to
-`$c->config->{root}`
+`$c->config->{root}`.  Should be a scalar.
 
 # METHODS
 
@@ -77,7 +77,7 @@ been set.
 
 ## render
 
-args: ($c, $template || \$template, \%args)
+args: ($c, $template || \$template, ?\%args, ?$coderef)
 
 Renders the given template and returns output.
 
@@ -87,6 +87,11 @@ filesystem.
 
 However, if `$template` is a ref, we assume this is a scalar ref containing 
 some html you wish to render directly.
+
+If `\%args` is not defined we use the value of `$c-`stash>.
+
+If `$coderef` is defined and is a subroutine reference, we use is the same way
+we use [zoom_do](http://search.cpan.org/perldoc?zoom_do).
 
 # STASH KEYS
 
@@ -155,4 +160,4 @@ submit bug reports and patches :).
 
 # THANKS
 
-Thanks to Thomas Doran for the initial starting point
+Thanks to Thomas Doran for the initial starting point.

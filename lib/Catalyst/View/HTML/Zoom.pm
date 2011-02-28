@@ -58,16 +58,16 @@ sub _template_path_part_from_context {
 }
 
 sub render {
-    my ($self, $c, $template_path_part, $args) = @_;
+    my ($self, $c, $template_path_part, $args, $code) = @_;
     my $vars =  {$args ? %{ $args } : %{ $c->stash }};
     my $zoom = $self->_build_zoom_from($template_path_part);
-    my $renderer = $self->_build_renderer_from($c);
+    my $renderer = $self->_build_renderer_from($c, $code);
     return $renderer->($zoom, $vars)->to_html;
 }
 
 sub _build_renderer_from {
-    my ($self, $c) = @_;
-    if(my $code = $c->stash->{zoom_do}) {
+    my ($self, $c, $code) = @_;
+    if($code = $code ? $code : $c->stash->{zoom_do}) {
         $self->_build_renderer_from_coderef($code);
     } else {
         $self->_build_renderer_from_zoomer_class($c);
@@ -207,16 +207,16 @@ L<Catalyst> configuration or locally as in:
 =head2 template_extension
 
 Optionally set the filename extension of your zoomable templates.  Common
-values might be C<html> or C<xhtml>
+values might be C<html> or C<xhtml>.  Should be a scalar.
 
 =head2 content_type
 
-Sets the default C<content-type> of the response body.
+Sets the default C<content-type> of the response body.  Should be a scalar.
 
 =head2 root
 
 Used at the prefix path for where yout templates are stored.  Defaults to
-C<< $c->config->{root} >>
+C<< $c->config->{root} >>.  Should be a scalar.
 
 =head1 METHODS
 
@@ -237,7 +237,7 @@ been set.
 
 =head2 render
 
-args: ($c, $template || \$template, \%args)
+args: ($c, $template || \$template, ?\%args, ?$coderef)
 
 Renders the given template and returns output.
 
@@ -247,6 +247,11 @@ filesystem.
 
 However, if C<$template> is a ref, we assume this is a scalar ref containing 
 some html you wish to render directly.
+
+If C<\%args> is not defined we use the value of C<$c->stash>.
+
+If C<$coderef> is defined and is a subroutine reference, we use is the same way
+we use L<zoom_do>.
 
 =head1 STASH KEYS
 
@@ -315,7 +320,7 @@ submit bug reports and patches :).
 
 =head1 THANKS
 
-Thanks to Thomas Doran for the initial starting point
+Thanks to Thomas Doran for the initial starting point.
 
 =cut
 
