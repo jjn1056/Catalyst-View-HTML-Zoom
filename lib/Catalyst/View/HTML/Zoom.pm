@@ -3,6 +3,7 @@ package Catalyst::View::HTML::Zoom;
 
 use Moose;
 use Class::MOP;
+use Moose::Util::TypeConstraints ();
 use HTML::Zoom;
 use Path::Class ();
 use namespace::autoclean;
@@ -26,6 +27,15 @@ has content_type => (
 has root => (
     is => 'ro',
     lazy_build => 1,
+);
+
+sub _zoom_render_methods { qw/to_html to_fh to_stream/ }
+
+has renders_as_method => (
+    is => 'ro',
+    isa => Moose::Util::TypeConstraints::enum([&_zoom_render_methods()]),
+    required => 1,
+    default => 'to_html',
 );
 
 sub _build_root {
@@ -58,12 +68,23 @@ sub _template_path_part_from_context {
 }
 
 sub render {
+    my $self = shift;
+    my $default_render = $self->renders_as_method;
+    my $hz = $self->render_to_zoom(@_);
+    return $self->${\"render_$default_render"}($hz);
+}
+
+sub render_to_zoom {
     my ($self, $c, $template_path_part, $args, $code) = @_;
     my $vars =  {$args ? %{ $args } : %{ $c->stash }};
     my $zoom = $self->_build_zoom_from($template_path_part);
     my $renderer = $self->_build_renderer_from($c, $code);
-    return $renderer->($zoom, $vars)->to_html;
+    return $renderer->($zoom, $vars);
 }
+
+sub render_to_html { $_[1]->to_html }
+sub render_to_fh { $_[1]->to_fh }
+sub render_to_stream { $_[1]->to_steam }
 
 sub _build_renderer_from {
     my ($self, $c, $code) = @_;
