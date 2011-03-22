@@ -24,11 +24,6 @@ has content_type => (
     default => 'text/html; charset=utf-8',
 );
 
-has root => (
-    is => 'ro',
-    lazy_build => 1,
-);
-
 sub _zoom_render_methods { qw/to_html to_fh to_stream/ }
 
 has default_renders_as_method => (
@@ -38,8 +33,19 @@ has default_renders_as_method => (
     default => 'to_html',
 );
 
+has root => (
+    is => 'ro',
+    lazy_build => 1,
+);
+
 sub _build_root {
     shift->_application->config->{root};
+}
+
+has cached_files => ( is=>'rw', isa=>'HashRef', lazy_build=>1);
+
+sub _build_cached_files {
+    return +{};
 }
 
 sub process {
@@ -123,7 +129,7 @@ sub _build_zoom_from {
         return $self->_build_zoom_from_html($$template_path_part);
     } else {
         my $template_abs_path = $self->_template_abs_path_from($template_path_part);
-        return $self->_build_zoom_from_file($template_abs_path);
+        return $self->_build_zoom_from_cache_or_file($template_abs_path);
     }
 }
 
@@ -131,6 +137,18 @@ sub _build_zoom_from_html {
     my ($self, $html) = @_;
     $self->_debug_log("Building HTML::Zoom from direct HTML");
     HTML::Zoom->from_html($html);
+}
+
+sub _build_zoom_from_cache_or_file {
+    my ($self, $file) = @_;
+    my @info = stat($file);
+    if(my $cached_zoom = $self->cached_files->{$file}{$info[9]}) {
+        $self->_debug_log("Building HTML::Zoom from cache $file:$info[9]");
+        return $cached_zoom->memoize;
+    } else {
+        delete $self->cached_files->{$file};
+        return $self->cached_files->{$file}->{$info[9]} = $self->_build_zoom_from_file($file);
+    }
 }
 
 sub _build_zoom_from_file {
@@ -250,6 +268,12 @@ the docs for the stash key C<zoom_renders_as_method>.
 
 Allows values are: to_html (default), to_fh and to_stream.  Please see the
 documentation for L<HTML::Zoom> for details.
+
+=head2 cached_files
+
+This is currently a HashRef of information pointed to cached versions of your
+loaded zoom templates.  This should not be considered public info and in the
+future we will probably allow different caching mechanisms.
 
 =head1 METHODS
 
