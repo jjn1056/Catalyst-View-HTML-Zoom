@@ -31,7 +31,7 @@ has root => (
 
 sub _zoom_render_methods { qw/to_html to_fh to_stream/ }
 
-has renders_as_method => (
+has default_renders_as_method => (
     is => 'ro',
     isa => Moose::Util::TypeConstraints::enum([&_zoom_render_methods()]),
     required => 1,
@@ -69,7 +69,9 @@ sub _template_path_part_from_context {
 
 sub render {
     my $self = shift;
-    my $default_render = $self->renders_as_method;
+    my ($c) = @_;
+    my $default_render = $c->stash->{zoom_renders_as_method} ? 
+      $c->stash->{zoom_renders_as_method} : $self->default_renders_as_method;
     my $hz = $self->render_to_zoom(@_);
     return $self->${\"render_$default_render"}($hz);
 }
@@ -239,6 +241,16 @@ Sets the default C<content-type> of the response body.  Should be a scalar.
 Used at the prefix path for where yout templates are stored.  Defaults to
 C<< $c->config->{root} >>.  Should be a scalar.
 
+=head2 default_renders_as_method
+
+By default we flatten L<HTML::Zoom> objects to html.  However, L<HTML::Zoom>
+allows you to render to a filehandle or zoom event stream.  This attribute
+allows you to control this globally.  For more finely grained control, see
+the docs for the stash key C<zoom_renders_as_method>.
+
+Allows values are: to_html (default), to_fh and to_stream.  Please see the
+documentation for L<HTML::Zoom> for details.
+
 =head1 METHODS
 
 This class contains the following methods available for public use.
@@ -331,6 +343,14 @@ prototyping.
     }
 
 If this key is not defined, we assume you want to use a class as above.
+
+=head2 zoom_renders_as_method
+
+The attribute L</default_renders_as_method> gives you control over how a 
+zoom object is rendered suitable for use in a L<Catalyst> response body.  By
+default we render to an HTML stream, but options to render to a filehandle or
+a zoom event stream also exist.  This stash key allows you to selectively
+override how a particular rendering happens.
 
 =head1 WARNING: VOLATILE!
 
