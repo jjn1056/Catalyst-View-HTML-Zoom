@@ -286,6 +286,14 @@ If C<\%args> is not defined we use the value of C<$c->stash>.
 If C<$coderef> is defined and is a subroutine reference, we use is the same way
 we use L<zoom_do>.
 
+=head2 render_to_zoom
+
+This is nearly the same as L</render> except it returns an L<HTML::Zoom> object
+that you can run commands on.  You can't pass this as is to L<Catalyst::Response>
+you will need to manually run C<to_html> or similar on it first.
+
+Use this when you are building up complex L<HTML::Zoom> pipelines.
+
 =head1 STASH KEYS
 
 This View uses the following stash keys as hints to the processor.  Currently
