@@ -29,5 +29,15 @@ sub name_zaction_class_short :Local {
     );
 }
 
+sub name_zaction_class_short_fh :Local {
+    my ($self, $c) = @_;
+    $c->stash(
+      name => 'Dave',
+      template => 'main',
+      zoom_action => 'main',
+      zoom_class => '::Root',
+      zoom_renders_as_method => 'to_fh',
+    );
+}
 
 __PACKAGE__->meta->make_immutable;

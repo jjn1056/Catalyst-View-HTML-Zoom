@@ -52,4 +52,12 @@ use Catalyst::Test 'TestApp';
     ok $ctx->res->body =~ m|Hello <span id="name">John</span>|;
 }
 
+{
+    my ($res, $ctx) = ctx_request('/foo/name_zaction_class_short_fh');
+    ok $res->is_success;
+    is ref($ctx->res->body), 'HTML::Zoom::ReadFH', 'body is fh';
+    ok my $body = $ctx->res->body->getline;
+    ok $body =~ m|Hello <span id="name">Dave</span>|;
+}
+
 done_testing;
