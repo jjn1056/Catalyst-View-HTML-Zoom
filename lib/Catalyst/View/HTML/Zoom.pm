@@ -146,7 +146,7 @@ sub _build_zoom_from_cache_or_file {
         return $cached_zoom->memoize;
     } else {
         my $new_zoom = $self->_build_zoom_from_file($file);
-        $self->_set_zoom_cache_for_file_with_key($zoom, $file, $info[9]);
+        $self->_set_zoom_cache_for_file_with_key($new_zoom, $file, $info[9]);
         return $new_zoom;
     }
 }
@@ -172,7 +172,7 @@ sub _template_abs_path_from {
     my ($self, $template_path_part) = @_;
     return Path::Class::dir(
       $self->root,
-      $self->_path_parts_from_template_path_part($template_path_path),
+      $self->_path_parts_from_template_path_part($template_path_part),
     );
 }
 
