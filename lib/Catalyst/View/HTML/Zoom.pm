@@ -42,9 +42,9 @@ sub _build_root {
     shift->_application->config->{root};
 }
 
-has cached_files => ( is=>'rw', isa=>'HashRef', lazy_build=>1);
+has _cached_files => ( is=>'rw', isa=>'HashRef', lazy_build=>1);
 
-sub _build_cached_files {
+sub _build__cached_files {
     return +{};
 }
 
@@ -74,8 +74,7 @@ sub _template_path_part_from_context {
 }
 
 sub render {
-    my $self = shift;
-    my ($c) = @_;
+    my ($self, $c, $template_path_part, $args, $code) = (shift, @_);
     my $default_render = $c->stash->{zoom_renders_as_method} ? 
       $c->stash->{zoom_renders_as_method} : $self->default_renders_as_method;
     my $hz = $self->render_to_zoom(@_);
@@ -142,13 +141,25 @@ sub _build_zoom_from_html {
 sub _build_zoom_from_cache_or_file {
     my ($self, $file) = @_;
     my @info = stat($file);
-    if(my $cached_zoom = $self->cached_files->{$file}{$info[9]}) {
+    if(my $cached_zoom = $self->_cached_files->{$file}{$info[9]}) {
         $self->_debug_log("Building HTML::Zoom from cache $file:$info[9]");
         return $cached_zoom->memoize;
     } else {
-        delete $self->cached_files->{$file};
-        return $self->cached_files->{$file}->{$info[9]} = $self->_build_zoom_from_file($file);
+        my $new_zoom = $self->_build_zoom_from_file($file);
+        $self->_set_zoom_cache_for_file_with_key($zoom, $file, $info[9]);
+        return $new_zoom;
     }
+}
+
+sub _set_zoom_cache_for_file_with_key {
+    my ($self, $zoom, $file, $key) = @_;
+    $self->_clear_cache_for_file($file);
+    $self->_cached_files->{$file}->{$key} = $zoom;
+}
+
+sub _clear_cache_for_file {
+    my ($self, $file) = @_;
+    delete $self->_cached_files->{$file};
 }
 
 sub _build_zoom_from_file {
@@ -159,8 +170,13 @@ sub _build_zoom_from_file {
 
 sub _template_abs_path_from {
     my ($self, $template_path_part) = @_;
-    Path::Class::dir($self->root, $template_path_part);
+    return Path::Class::dir(
+      $self->root,
+      $self->_path_parts_from_template_path_part($template_path_path),
+    );
 }
+
+sub _path_parts_from_template_path_part { split '/', $_[1] }
 
 sub _zoomer_class_from_context {
     my ($self, $c) = @_;
@@ -187,8 +203,8 @@ sub _build_zoomer_from {
 
 sub _target_action_from_context {
     my ($self, $c) = @_;
-    return $c->stash->{zoom_action}
-      || $c->action->name;
+    return ($c->stash->{zoom_action}
+      || $c->action->name);
 }
 
 sub _debug_log {
@@ -242,7 +258,8 @@ L<Catalyst> configuration or locally as in:
     extends 'Catalyst::View::HTML::Zoom';
 
     __PACKAGE__->config({
-        content_type => 'text/plain',
+        content_type => 'text/html',
+        root =>  '__path_to(share,templates)__',
     });
 
 =head2 template_extension
@@ -257,7 +274,15 @@ Sets the default C<content-type> of the response body.  Should be a scalar.
 =head2 root
 
 Used at the prefix path for where yout templates are stored.  Defaults to
-C<< $c->config->{root} >>.  Should be a scalar.
+C<< $c->config->{root} >>.  Should be a scalar that is the local filesystem
+path, although best practice is to save this in a filesystem agnostic manner
+such as: 
+
+    ## If you are using ConfigLoader
+    root => `'__path_to(share,templates)__'
+    
+    ## Templates stored in some global area
+    root => File::Spec->catdir(File::HomeDir->my_documents, 'templates')
 
 =head2 default_renders_as_method
 
@@ -269,7 +294,11 @@ the docs for the stash key C<zoom_renders_as_method>.
 Allows values are: to_html (default), to_fh and to_stream.  Please see the
 documentation for L<HTML::Zoom> for details.
 
-=head2 cached_files
+Please note rendering to a zoom event stream is not something that L<Catalyst>
+supports natively.  You might use this method if you are building complex and
+manually rendered pipelines.
+
+=head2 _cached_files
 
 This is currently a HashRef of information pointed to cached versions of your
 loaded zoom templates.  This should not be considered public info and in the
