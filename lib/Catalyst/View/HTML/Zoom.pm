@@ -50,31 +50,31 @@ sub _build__cached_files {
 
 sub process {
     my ($self, $c) = @_;    
-    my $template_path_part = $self->_template_path_part_from_context($c);
-    if(my $out = $self->render($c, $template_path_part)) {
+    my $template_path_suffix = $self->_template_path_suffix_from_context($c);
+    if(my $out = $self->render($c, $template_path_suffix)) {
         $c->response->body($out);
         $c->response->content_type($self->content_type)
           unless ($c->response->content_type);
         return 1;
     } else {
-        $c->log->error("The template: $template_path_part returned no response");
+        $c->log->error("The template: $template_path_suffix returned no response");
         return 0;
     }
 }
 
-sub _template_path_part_from_context {
+sub _template_path_suffix_from_context {
     my ($self, $c) = @_;
-    my $template_path_part = $c->stash->{template} || $c->action->private_path;
+    my $template_path_suffix = $c->stash->{template} || $c->action->private_path;
     if ($self->has_template_extension) {
         my $ext = $self->template_extension;
-        $template_path_part = $template_path_part . '.' . $ext
-          unless $template_path_part =~ /\.$ext$/ || ref $template_path_part;
+        $template_path_suffix = $template_path_suffix . '.' . $ext
+          unless $template_path_suffix =~ /\.$ext$/ || ref $template_path_suffix;
     }
-    return $template_path_part;
+    return $template_path_suffix;
 }
 
 sub render {
-    my ($self, $c, $template_path_part, $args, $code) = (shift, @_);
+    my ($self, $c, $template_path_suffix, $args, $code) = (shift, @_);
     my $default_render = $c->stash->{zoom_renders_as_method} ? 
       $c->stash->{zoom_renders_as_method} : $self->default_renders_as_method;
     my $hz = $self->render_to_zoom(@_);
@@ -82,9 +82,9 @@ sub render {
 }
 
 sub render_to_zoom {
-    my ($self, $c, $template_path_part, $args, $code) = @_;
+    my ($self, $c, $template_path_suffix, $args, $code) = @_;
     my $vars =  {$args ? %{ $args } : %{ $c->stash }};
-    my $zoom = $self->_build_zoom_from($template_path_part);
+    my $zoom = $self->_build_zoom_from($template_path_suffix);
     my $renderer = $self->_build_renderer_from($c, $code);
     return $renderer->($zoom, $vars);
 }
@@ -123,11 +123,11 @@ sub _build_renderer_from_zoomer_class {
 }
 
 sub _build_zoom_from {
-    my ($self, $template_path_part) = @_;
-    if(ref $template_path_part) {
-        return $self->_build_zoom_from_html($$template_path_part);
+    my ($self, $template_path_suffix) = @_;
+    if(ref $template_path_suffix) {
+        return $self->_build_zoom_from_html($$template_path_suffix);
     } else {
-        my $template_abs_path = $self->_template_abs_path_from($template_path_part);
+        my $template_abs_path = $self->_template_abs_path_from($template_path_suffix);
         return $self->_build_zoom_from_cache_or_file($template_abs_path);
     }
 }
@@ -169,14 +169,14 @@ sub _build_zoom_from_file {
 }
 
 sub _template_abs_path_from {
-    my ($self, $template_path_part) = @_;
+    my ($self, $template_path_suffix) = @_;
     return Path::Class::dir(
       $self->root,
-      $self->_path_parts_from_template_path_part($template_path_part),
+      $self->_path_parts_from_template_path_suffix($template_path_suffix),
     );
 }
 
-sub _path_parts_from_template_path_part { split '/', $_[1] }
+sub _path_parts_from_template_path_suffix { split '/', $_[1] }
 
 sub _zoomer_class_from_context {
     my ($self, $c) = @_;
